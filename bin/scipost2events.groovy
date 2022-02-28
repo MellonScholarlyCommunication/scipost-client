@@ -3,9 +3,6 @@
 import scipost.SciPostClient
 import scipost.Util
 import groovy.json.JsonOutput
-import groovy.transform.Field
-
-@Field String BASE_URL = 'https://scipost.org'
 
 def submissionsFile = './data/submissions.json'
 def publicatonsFile = './data/publications.json'
