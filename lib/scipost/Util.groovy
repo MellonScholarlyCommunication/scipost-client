@@ -3,12 +3,8 @@ package scipost
 class Util {
     // Create a activity id from a URL
     static def makeActivityId(url,id) {
-        if (url.startsWith('https://arxiv')) {
-            return url + "/event/" + id 
-        }
-        else {
-            return url + "event/" + id 
-        }
+        def frag = url.replaceAll("v[0-9]+/?\$","")
+        return frag + "/event/" + id 
     }
 
     // Create a URL from a sciPost preprint url

@@ -70,12 +70,10 @@ def preprintOfferProcessor(thread) {
         def json = JsonOutput.toJson(event)
 
         def outputFile = "output/" + makeEventFile(id)
-        def parentDir  = new File(outputFile).getParent()
 
         System.err.println("Writing to ${outputFile}")
-
-        if (! new File(parentDir).exists() )
-            new File(parentDir).mkdirs()
+        
+        createEventDir(outputFile)
 
         new File(outputFile).write(
            JsonOutput.prettyPrint(json) 
@@ -85,4 +83,10 @@ def preprintOfferProcessor(thread) {
 
 def makeEventFile(id) {
     return id.replaceAll("https://","")
+}
+
+def createEventDir(id) {
+    def parentDir = new File(id).getParent()
+    if (! new File(parentDir).exists() )
+        new File(parentDir).mkdirs() 
 }
