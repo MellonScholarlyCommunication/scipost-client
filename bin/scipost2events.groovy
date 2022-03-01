@@ -40,11 +40,13 @@ def preprintOfferProcessor(thread) {
         def thread_seq = submission['thread_sequence_order']
 
         def object_id  = Util.makePreprintUrl(preprint)
-        def id         = Util.makeActivityId(object_id,"${thread_id}.${thread_seq}")
+
+        // The activity identifier is the preprint URL plus thread identifiers
+        // We mimic the behaviour of a repository 
+        def id         = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
         def authors    = Util.parseAuthor(submission['author_list'])
-        def actor_id   = Util.webidLookup(authors[0])
-        def origin     = Util.originLookup(authors[0])
-        def target     = Util.targetLookup()
+        def actor_id   = Util.webidLookup(authors[0],object_id)
+        def origin     = Util.originLookup(authors[0],object_id)
         def cite_as    = Util.makeDOI(object_id)
 
         def event = [
@@ -62,16 +64,21 @@ def preprintOfferProcessor(thread) {
                 'type' : 'Document'
             ] ,
             'origin' : origin ,
-            'target' : target
+            'target' : [
+                'id'   : 'https://scipost.org/profile/card#me' ,
+                'name' : 'Scipost service' ,
+                'type' : 'Application'
+            ]
         ]
 
         def json = JsonOutput.toJson(event)
 
-        def outputFile = "output/" + makeEventFile(id)
+        // Create a file name out of the activity identifier
+        def outputFile = "output/" + makeActivityFile(id)
 
         System.err.println("Writing to ${outputFile}")
         
-        createEventDir(outputFile)
+        createActivityDir(outputFile)
 
         new File(outputFile).write(
            JsonOutput.prettyPrint(json) 
@@ -89,12 +96,14 @@ def acceptOfferProcessor(thread) {
         def thread_id  = submission['thread_hash']
         def thread_seq = submission['thread_sequence_order']
 
-        def id         = Util.makeActivityId(service,"${thread_id}.${thread_seq}")
+        // The activity identifier is the service URL plus thread identifiers
+        def id         = Util.makeActivityId(service,"02.${thread_id}.${thread_seq}.accept")
+
         def object_id  = Util.makePreprintUrl(preprint)
-        def inReplyTo  = Util.makeActivityId(object_id,"${thread_id}.${thread_seq}")
-        def offer_id   = Util.makeActivityId(object_id,"${thread_id}.${thread_seq}")
+        def inReplyTo  = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
+        def offer_id   = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
         def authors    = Util.parseAuthor(submission['author_list'])
-        def target_id  = Util.webidLookup(authors[0])
+        def target_id  = Util.webidLookup(authors[0],object_id)
         def cite_as    = Util.makeDOI(object_id)
 
         def event = [
@@ -102,10 +111,10 @@ def acceptOfferProcessor(thread) {
             'id' : id ,
             'type' : 'Accept' ,
             'actor' : [
-                'id'   : 'https://scipost.org/person/admin/profile/card#me' ,
-                'name' : 'Scipost autoreply robot' ,
-                'type' : 'Software'
-            ] ,
+                'id'   : 'https://scipost.org/profile/card#me' ,
+                'name' : 'Scipost service' ,
+                'type' : 'Application'
+            ],
             'context' : [
                 'id' : object_id ,
                 'ietf:cite-as': cite_as ,
@@ -131,23 +140,37 @@ def acceptOfferProcessor(thread) {
 
         def json = JsonOutput.toJson(event)
 
-        def outputFile = "output/" + makeEventFile(id)
+        // Create a file name out of the activity identifier
+        def outputFile = "output/" + makeActivityFile(id)
 
         System.err.println("Writing to ${outputFile}")
         
-        createEventDir(outputFile)
+        createActivityDir(outputFile)
 
         new File(outputFile).write(
            JsonOutput.prettyPrint(json) 
         )
+        
+        // Create the same event for the preprint
+
+        def object_event = Util.makeActivityId(object_id,"02.${thread_id}.${thread_seq}.accept")
+        outputFile = "output/" + makeActivityFile(object_event)
+
+        System.err.println("Writing to ${outputFile}")
+        
+        createActivityDir(outputFile)
+
+        new File(outputFile).write(
+           JsonOutput.prettyPrint(json) 
+        ) 
     }
 }
 
-def makeEventFile(id) {
+def makeActivityFile(id) {
     return id.replaceAll("https://","")
 }
 
-def createEventDir(id) {
+def createActivityDir(id) {
     def parentDir = new File(id).getParent()
     if (! new File(parentDir).exists() )
         new File(parentDir).mkdirs() 

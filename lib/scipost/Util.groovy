@@ -2,6 +2,7 @@ package scipost
 
 class Util {
     // Create a activity id from a URL
+    // All activity identifiers will be events (part of an event logs)
     static def makeActivityId(url,id) {
         def frag = url.replaceAll("v[0-9]+/?\$","")
         return frag + "/event/" + id 
@@ -36,26 +37,32 @@ class Util {
     }
 
     // Mock webid lookup for an author
-    static def webidLookup(name) {
+    static def webidLookup(name,context) {
         def webidName = name.replaceAll(' ','_').toLowerCase()
 
-        return "https://${webidName}.arxiv.org/profile/card#me"
+        def iriPart = context.replaceAll('https://','')
+                             .replaceAll('/.*','')
+
+        return "https://${iriPart}/profile/${webidName}/card#me"
     }
 
     // Mock origin lookup for an author
-    static def originLookup(name) {
-        return [
-            'id'   : 'https://arxiv.org/profile/card$#me' ,
-            'name' : 'arXiv pod' ,
-            'type' : 'Application'
-        ]
-    }
+    static def originLookup(name,context) {
+        def iriPart = context.replaceAll('https://','')
+                             .replaceAll('/.*','')
 
-    // Mock target lookup for this service
-    static def targetLookup() {
+        def serviceName = ''
+
+        if (iriPart.matches(".*arxiv.*")) {
+            serviceName = 'arXiv repository'
+        }
+        else {
+            serviceName = 'Scipost repository'
+        }
+
         return [
-            'id'   : 'https://scipost.org/profile/card#me' ,
-            'name' : 'Scipost service' ,
+            'id'   : "https://${iriPart}/profile/card#me" ,
+            'name' : serviceName ,
             'type' : 'Application'
         ]
     }
