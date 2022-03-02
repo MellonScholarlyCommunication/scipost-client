@@ -46,6 +46,16 @@ class Util {
         return "https://${iriPart}/profile/${webidName}/card#me"
     }
 
+    // Mock inbox lookup for an author
+    static def inboxLookup(name,context) {
+        def webidName = name.replaceAll(' ','_').toLowerCase()
+
+        def iriPart = context.replaceAll('https://','')
+                             .replaceAll('/.*','')
+
+        return "https://${iriPart}/inbox/${webidName}/"
+    } 
+
     // Mock origin lookup for an author
     static def originLookup(name,context) {
         def iriPart = context.replaceAll('https://','')
@@ -61,9 +71,9 @@ class Util {
         }
 
         return [
-            'id'   : "https://${iriPart}/profile/card#me" ,
-            'name' : serviceName ,
-            'type' : 'Application'
+            'id'    : "https://${iriPart}/profile/card#me" ,
+            'name'  : serviceName ,
+            'type'  : 'Application'
         ]
     }
 }

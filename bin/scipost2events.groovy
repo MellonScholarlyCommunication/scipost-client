@@ -43,20 +43,22 @@ def preprintOfferProcessor(thread) {
 
         // The activity identifier is the preprint URL plus thread identifiers
         // We mimic the behaviour of a repository 
-        def id         = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
-        def authors    = Util.parseAuthor(submission['author_list'])
-        def actor_id   = Util.webidLookup(authors[0],object_id)
-        def origin     = Util.originLookup(authors[0],object_id)
-        def cite_as    = Util.makeDOI(object_id)
+        def id          = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
+        def authors     = Util.parseAuthor(submission['author_list'])
+        def actor_id    = Util.webidLookup(authors[0],object_id)
+        def actor_inbox = Util.inboxLookup(authors[0],object_id)
+        def origin      = Util.originLookup(authors[0],object_id)
+        def cite_as     = Util.makeDOI(object_id)
 
         def event = [
             '@context' : 'https://www.w3.org/ns/activitystreams' ,
             'id' : id ,
             'type' : 'Offer' ,
             'actor' : [
-                'id'   : actor_id ,
-                'name' : authors[0] ,
-                'type' : 'Person'
+                'id'    : actor_id ,
+                'name'  : authors[0] ,
+                'inbox' : actor_inbox ,
+                'type'  : 'Person'
             ] ,
             'object' : [
                 'id' : object_id ,
@@ -65,9 +67,10 @@ def preprintOfferProcessor(thread) {
             ] ,
             'origin' : origin ,
             'target' : [
-                'id'   : 'https://scipost.org/profile/card#me' ,
-                'name' : 'Scipost service' ,
-                'type' : 'Application'
+                'id'    : 'https://scipost.org/profile/card#me' ,
+                'name'  : 'Scipost service' ,
+                'inbox' : 'https://scipost.org/inbox/' ,
+                'type'  : 'Application'
             ]
         ]
 
@@ -87,7 +90,7 @@ def preprintOfferProcessor(thread) {
 }
 
 // Accept Offer takes all submissons and act as if
-// for each of them an Accept was send back to the author
+// for each of them an Accept was sent back to the author
 def acceptOfferProcessor(thread) {
     for (submission in thread) {
         def service    = "https://scipost.org/submissons"
@@ -99,21 +102,23 @@ def acceptOfferProcessor(thread) {
         // The activity identifier is the service URL plus thread identifiers
         def id         = Util.makeActivityId(service,"02.${thread_id}.${thread_seq}.accept")
 
-        def object_id  = Util.makePreprintUrl(preprint)
-        def inReplyTo  = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
-        def offer_id   = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
-        def authors    = Util.parseAuthor(submission['author_list'])
-        def target_id  = Util.webidLookup(authors[0],object_id)
-        def cite_as    = Util.makeDOI(object_id)
+        def object_id    = Util.makePreprintUrl(preprint)
+        def inReplyTo    = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
+        def offer_id     = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
+        def authors      = Util.parseAuthor(submission['author_list'])
+        def target_id    = Util.webidLookup(authors[0],object_id)
+        def target_inbox = Util.inboxLookup(authors[0],object_id)
+        def cite_as      = Util.makeDOI(object_id)
 
         def event = [
             '@context' : 'https://www.w3.org/ns/activitystreams' ,
             'id' : id ,
             'type' : 'Accept' ,
             'actor' : [
-                'id'   : 'https://scipost.org/profile/card#me' ,
-                'name' : 'Scipost service' ,
-                'type' : 'Application'
+                'id'    : 'https://scipost.org/profile/card#me' ,
+                'name'  : 'Scipost service' ,
+                'inbox' : 'https://scipost.org/inbox/' ,
+                'type'  : 'Application'
             ],
             'context' : [
                 'id' : object_id ,
@@ -132,9 +137,10 @@ def acceptOfferProcessor(thread) {
                 'type': 'Application'
             ] ,
             'target' : [
-                'id'   : target_id ,
-                'name' : authors[0] ,
-                'type' : 'Person' 
+                'id'    : target_id ,
+                'name'  : authors[0] ,
+                'inbox' : target_inbox ,
+                'type'  : 'Person' 
             ]
         ]
 
@@ -164,6 +170,11 @@ def acceptOfferProcessor(thread) {
            JsonOutput.prettyPrint(json) 
         ) 
     }
+}
+
+// Announce Publication takes all publications and act as if
+// for each of them an Announce was sent back to the author
+def announcePublicationProcessor(thread) {
 }
 
 def makeActivityFile(id) {
