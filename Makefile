@@ -10,4 +10,4 @@ events:
 	./bin/scipost2events.groovy
 
 clean:
-	rm -rf output/* 
+	rm -rf output/arxiv.org output/doi.org output/scipost.org

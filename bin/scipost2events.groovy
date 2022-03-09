@@ -114,13 +114,13 @@ def preprintOfferProcessor(thread) {
 // for each of them an Accept was sent back to the author
 def acceptOfferProcessor(thread) {
     for (submission in thread) {
-        def service    = "https://scipost.org/submissons"
 
         def preprint   = submission['preprint']['url'].replaceAll("http:","https:")
         def thread_id  = submission['thread_hash']
         def thread_seq = submission['thread_sequence_order']
         def title      = submission['title']
         def published  = submission['submission_date'] + 'T00:00:30Z'
+        def service    = "https://scipost.org/submissons/02.${thread_id}.${thread_seq}"
 
         // The activity identifier is the service URL plus thread identifiers
         def id         = Util.makeActivityId(service,"02.${thread_id}.${thread_seq}.accept")

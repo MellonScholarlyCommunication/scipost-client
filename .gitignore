@@ -1,3 +1,5 @@
-output/**
+output/arxiv.org
+output/doi.org
+output/scipost.org
 data/**
 .sdkmanrc
