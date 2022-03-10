@@ -9,5 +9,4 @@ scipost.org/preprint - SciPost submissions from own SciPost preprint service
 
 Responses:
 
-scipost.org/submissions - Outgoing Accept events for any submissions
-scipost.org/publications - Outgoing Announce events for publications
+scipost.org/submissions - Incoming Offer + Outgoing Accept|Announce events for any submissions

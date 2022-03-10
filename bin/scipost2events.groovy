@@ -1,5 +1,8 @@
 #!/usr/bin/env groovy -cp lib
 
+/**
+ * Create an output directory with a Mellon proposed event log format
+ */
 import scipost.SciPostClient
 import scipost.Util
 import groovy.json.JsonOutput
@@ -11,7 +14,7 @@ def publicatonsFile = './data/publications.json'
 @Field submissionCollector = [:]
 
 new SciPostClient().cache_loop(submissionsFile, {
-    x -> threadCollector(x,submissionCollector)
+    x -> Util.threadCollector(x,submissionCollector)
 })
 
 submissionCollector.each { entry -> 
@@ -22,16 +25,6 @@ submissionCollector.each { entry ->
 new SciPostClient().cache_loop(publicatonsFile, {
     x -> announcePublicationProcessor(x)
 })
-
-def threadCollector(record, collector) {
-    def thread_hash = record['thread_hash']
-
-    if (! collector[thread_hash]) {
-        collector[thread_hash] = []
-    }
-
-    collector[thread_hash].push(record)
-}
 
 def submissionLookup(publication) {
     def accepted_submission = publication['accepted_submission'] 
@@ -107,6 +100,19 @@ def preprintOfferProcessor(thread) {
         new File(outputFile).write(
            JsonOutput.prettyPrint(json) 
         )
+
+        // Create the same event for scipost
+        def service      = "https://scipost.org/submissions/${thread_id}.${thread_seq}"
+        def object_event = Util.makeActivityId(service,"01.${thread_id}.${thread_seq}.offer")
+        outputFile = "output/" + makeActivityFile(object_event)
+
+        System.err.println("Writing to ${outputFile}")
+        
+        createActivityDir(outputFile)
+
+        new File(outputFile).write(
+           JsonOutput.prettyPrint(json) 
+        ) 
     }
 }
 
@@ -120,7 +126,7 @@ def acceptOfferProcessor(thread) {
         def thread_seq = submission['thread_sequence_order']
         def title      = submission['title']
         def published  = submission['submission_date'] + 'T00:00:30Z'
-        def service    = "https://scipost.org/submissons/02.${thread_id}.${thread_seq}"
+        def service    = "https://scipost.org/submissions/${thread_id}.${thread_seq}"
 
         // The activity identifier is the service URL plus thread identifiers
         def id         = Util.makeActivityId(service,"02.${thread_id}.${thread_seq}.accept")
@@ -208,15 +214,15 @@ def announcePublicationProcessor(publication) {
         return
     }
 
-    def url          = publication['url'].replaceAll("/","")
-    def service      = "https://scipost.org/publications/${url}"
-    def id           = Util.makeActivityId(service,"03.${url}.announce")
-
     def preprint     = submission['preprint']['url'].replaceAll("http:","https:")
     def thread_id    = submission['thread_hash']
     def thread_seq   = submission['thread_sequence_order']
     def stitle       = submission['title'] 
     def title        = publication['title']
+
+    def service      = "https://scipost.org/submissions/${thread_id}.${thread_seq}"
+    def id           = Util.makeActivityId(service,"03.${thread_id}.${thread_seq}.announce")
+
 
     def object_id    = Util.makePreprintUrl(preprint)
     def inReplyTo    = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
@@ -245,7 +251,7 @@ def announcePublicationProcessor(publication) {
         'inReplyTo': inReplyTo ,
         'context' : [
             'id'    : object_id ,
-            'title' : 'stitle',
+            'title' : stitle,
             'ietf:cite-as': scite_as,
             'type'  : 'Document'
         ],

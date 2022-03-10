@@ -76,4 +76,14 @@ class Util {
             'type'  : 'Application'
         ]
     }
+
+    static def threadCollector(record, collector) {
+        def thread_hash = record['thread_hash']
+
+        if (! collector[thread_hash]) {
+            collector[thread_hash] = []
+        }
+
+        collector[thread_hash].push(record)
+    }
 }
