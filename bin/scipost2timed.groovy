@@ -84,8 +84,77 @@ def submission2timedEvent(thread) {
 
         def json = JsonOutput.toJson(event)
 
-        println(json)
+        // println(json)
+
+        def reports = submission['reports']
+
+        if (reports) {
+            for (report in reports) {
+                report2timedEvent(submission,report)
+            }
+        }
      }
+}
+
+def report2timedEvent(submission,report) {
+    def preprint     = submission['preprint']['url'].replaceAll("http:","https:")
+    def thread_id    = submission['thread_hash']
+    def thread_seq   = submission['thread_sequence_order']
+    def title        = submission['title']
+    def service      = "https://scipost.org/submissions/${thread_id}.${thread_seq}"
+
+    def id           = Util.makeActivityId(service,"0X.${thread_id}.${thread_seq}.report")
+    def object_id    = Util.makePreprintUrl(preprint)
+    def inReplyTo    = Util.makeActivityId(object_id,"01.${thread_id}.${thread_seq}.offer")
+    def scite_as     = Util.makeDOI(object_id)
+
+    def authors      = Util.parseAuthor(submission['author_list'])
+    def target_id    = Util.webidLookup(authors[0],object_id)
+    def target_inbox = Util.inboxLookup(authors[0],object_id)
+
+    def report_published = report['date_submitted']
+    def report_id        = 'https://scipost.org' + report['url']
+    def reporter         = report['author'] 
+
+    def event = [
+        '@context' : 'https://www.w3.org/ns/activitystreams' ,
+        'id' : id ,
+        'type' : 'Announce' ,
+        'published' : report_published ,
+        'actor' : [
+            'id'    : 'https://scipost.org/profile/card#me' ,
+            'name'  : 'Scipost service' ,
+            'inbox' : 'https://scipost.org/inbox/' ,
+            'type'  : 'Application'
+        ],
+        'context' : [
+            'id' : object_id ,
+            'title': title ,
+            'ietf:cite-as': scite_as ,
+            'type' : 'Document'
+        ] ,
+        'inReplyTo': inReplyTo,
+        'object' : [
+            'id' : report_id,
+            'title': "${reporter}'s review of ${object_id}" ,
+            'type': 'Page'
+        ] ,
+        'origin' : [
+            'id' : 'https://scipost.org/profile/card#me',
+            'name': 'Scipost service',
+            'type': 'Application'
+        ] ,
+        'target' : [
+            'id'    : target_id ,
+            'name'  : authors[0] ,
+            'inbox' : target_inbox ,
+            'type'  : 'Person' 
+        ]
+    ]
+
+    def json = JsonOutput.toJson(event)
+
+    println(json)
 }
 
 def publication2timedEvent(publication) {
